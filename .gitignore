@@ -1,0 +1,27 @@
+# Données utilisateur
+exports/
+_temp/
+sortie/
+
+# Logs
+*.log
+*.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
