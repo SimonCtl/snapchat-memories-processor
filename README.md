@@ -20,6 +20,8 @@ L'export Snapchat fournit les médias bruts avec des noms UUID et les overlays d
 - **Python 3.9+**
 - **ffmpeg** — inclus automatiquement via le package `moviepy`, ou installable séparément
 
+> **Alternative :** un exécutable standalone (`SnapchatMemories.exe`) est disponible dans les [Releases](https://github.com/SimonCtl/snapchat-memories-processor/releases). Aucune installation requise — il suffit de le placer à côté du dossier `exports/` et de le lancer.
+
 ## Installation
 
 ```bash
@@ -92,6 +94,7 @@ sortie/
 
 ### Vidéos (MP4)
 - L'overlay PNG est superposé via **ffmpeg** (filtre `overlay`)
+- La rotation vidéo (displaymatrix) est détectée et corrigée automatiquement — les vidéos portrait stockées en paysage sont transposées avant l'application de l'overlay
 - Les métadonnées (date, GPS) sont ajoutées via **ffmpeg** en copie de flux (sans ré-encodage quand il n'y a pas d'overlay)
 
 ### Correspondance fichiers ↔ JSON
