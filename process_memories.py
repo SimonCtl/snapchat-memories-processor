@@ -294,25 +294,53 @@ def appliquer_overlay_jpg(chemin_base, chemin_overlay, chemin_sortie):
 
 def appliquer_overlay_mp4(ffmpeg, chemin_video, chemin_overlay, chemin_sortie):
     """Superpose un overlay PNG sur un MP4 via ffmpeg."""
-    # Récupérer les dimensions de la vidéo
+    # Récupérer les dimensions et la rotation de la vidéo
     r = subprocess.run(
         [ffmpeg, "-i", str(chemin_video)],
         capture_output=True, text=True, timeout=30,
     )
+
+    # Détecter la rotation (displaymatrix)
+    rotation = 0
+    rot_match = re.search(r"rotation of (-?\d+\.?\d*) degrees", r.stderr)
+    if rot_match:
+        rotation = round(float(rot_match.group(1))) % 360
+
+    # Détecter les dimensions brutes de la vidéo
     dim = re.search(r"(\d{2,5})x(\d{2,5})", r.stderr)
     if dim:
         larg, haut = int(dim.group(1)), int(dim.group(2))
+
+        # Dimensions d'affichage (après rotation)
+        if rotation in (90, 270):
+            larg_affich, haut_affich = haut, larg
+        else:
+            larg_affich, haut_affich = larg, haut
+
+        # Redimensionner l'overlay aux dimensions d'affichage
         overlay = Image.open(chemin_overlay)
-        if overlay.size != (larg, haut):
-            overlay = overlay.resize((larg, haut), Image.LANCZOS)
+        if overlay.size != (larg_affich, haut_affich):
+            overlay = overlay.resize((larg_affich, haut_affich), Image.LANCZOS)
             overlay.save(chemin_overlay, "PNG")
         overlay.close()
 
+    # Construire la chaîne de filtres (rotation manuelle + overlay)
+    if rotation == 270:
+        filtre = "[0:v]transpose=1[v];[v][1:v]overlay=0:0"
+    elif rotation == 90:
+        filtre = "[0:v]transpose=2[v];[v][1:v]overlay=0:0"
+    elif rotation == 180:
+        filtre = "[0:v]hflip,vflip[v];[v][1:v]overlay=0:0"
+    else:
+        filtre = "[0:v][1:v]overlay=0:0"
+
     cmd = [
         ffmpeg,
+        "-display_rotation:v:0", "0",
+        "-noautorotate",
         "-i", str(chemin_video),
         "-i", str(chemin_overlay),
-        "-filter_complex", "[0:v][1:v]overlay=0:0",
+        "-filter_complex", filtre,
         "-codec:a", "copy",
         "-y", str(chemin_sortie),
     ]
@@ -438,11 +466,7 @@ def main():
     _configurer_encodage()
 
     print("=" * 60)
-<<<<<<< HEAD
     print("  Snapchat Memories Processor")
-=======
-    print("  Snapchat Memories — Traitement hors-ligne")
->>>>>>> 595b2df05556afa645ec067ec410052a6b12bb24
     print("=" * 60)
 
     ffmpeg = trouver_ffmpeg()
@@ -482,10 +506,7 @@ def main():
     shutil.rmtree(DOSSIER_TEMP, ignore_errors=True)
 
     print(f"\nTerminé ! Vos memories sont dans ./{DOSSIER_SORTIE}/")
-<<<<<<< HEAD
     input("\nAppuyez sur Entrée pour fermer...")
-=======
->>>>>>> 595b2df05556afa645ec067ec410052a6b12bb24
 
 
 if __name__ == "__main__":
